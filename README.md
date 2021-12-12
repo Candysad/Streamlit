@@ -22,10 +22,10 @@
 
 缺失部分
 
-- [图表显示组件](###图表)
-- [Streamlit Components编写](####bi-directional component)
-- [Streamlit Cloud](###Streamlit Cloud)
-- [数据库连接](###数据库)
+- 图表显示组件
+- Streamlit Components编写
+- Streamlit Cloud
+- 数据库连接
 
 
 
