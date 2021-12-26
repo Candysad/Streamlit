@@ -20,7 +20,7 @@
 - `icon`：实例演示的webapp的icon
 - `data`：实例演示中使用的媒体文件
 
-缺失部分
+**缺失部分**
 
 - 图表显示组件
 - Streamlit Components编写

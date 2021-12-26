@@ -6,6 +6,22 @@
 
 
 
+### 写在前面
+
+Streamlit基于python脚本文件来实现网页应用，本质上，是在整个python脚本上不断重复从头运行到结尾的过程
+
+这意味着，两个if...else分支中的部分是完全隔离，且通过按钮等方式运行一个又运行另一个时，其中一个的作用将完全不会对另一个分支产生任何影响，实际上Streamlit是从if...else语句的开头从新运行了这部分代码直到下一个暂停点
+
+比如，点击第一个按钮使得if...else进入第一个分支修改一个全局变量tmp的值（初始为 0），使其自增 1，随后点击另一个按钮进入另一个分支，使tmp再次自增 1，最终tmp的值会是 1，因为两个分支最终只会运行一个，即第二个分支，第一个分支的操作会被Streamli回滚而取消
+
+另外，所有可交互的组件如按钮和勾选框，对其进行一次交互只是修改了一次它的状态，与其绑定的on_click函数仅在其被激活的状态下运行一次，其没有激活时(按钮点击一次后，点击其他交互组件即会自动退回未激活状态)与其绑定的on_click函数就会回撤而变为未运行过的状态
+
+因此，基于Streamlit的这种从前到后的脚本运行的特性，很多应用程序的编写逻辑可能与其他框架不同，当需要对某个数据反复修改时，需要考虑使用外部存储的方法
+
+**这部分的一些详细例子将留在[最后](##使用说明)**
+
+
+
 ### 文档说明
 
 本文档参照官方文档翻译总结
@@ -364,7 +380,10 @@ st.json(body)
 #### st.button
 
 ```python
-st.button(label, key=None, help=None, on_click=None, args=None, kwargs=None)
+st.button(label,
+          key=None, help=None,
+          on_click=None, args=None,
+          kwargs=None)
 ```
 
 - 按钮
@@ -391,7 +410,11 @@ st.button(label, key=None, help=None, on_click=None, args=None, kwargs=None)
 #### st.download_button
 
 ```python
-st.download_button(label, data, file_name=None, mime=None, key=None, help=None, on_click=None, args=None, kwargs=None)
+st.download_button(label, data,
+                   file_name=None, mime=None,
+                   key=None, help=None,
+                   on_click=None, args=None,
+                   kwargs=None)
 ```
 
 - 下载按钮
@@ -426,7 +449,10 @@ st.download_button(label, data, file_name=None, mime=None, key=None, help=None, 
 #### st.checkbox
 
 ```python
-st.checkbox(label, value=False, key=None, help=None, on_change=None, args=None, kwargs=None)
+st.checkbox(label,
+            value=False, key=None,
+            help=None, on_change=None,
+            args=None, kwargs=None)
 ```
 
 - 勾选列表
@@ -1404,13 +1430,9 @@ st.sidebar
 
 - 边栏
 
-  - 使用
+  边栏是整个应用一直存在的一个唯一组件，直接调用，不能赋值给变量（not callable）
 
-    ```python
-    st.sidebar.(widget)
-    ```
-
-    来给设置边栏中的组件
+  边栏不支持 `st.spinner` 与 `st.echo` 两个组件
 
   - 有相同类型的组件时，需要为每个组件设置单独的key，例：
 
@@ -1845,13 +1867,14 @@ st.form_submit_button(label="Submit",
 
 
 
-### 页面设置与示例代码
+### 页面设置与代码示例
 
 #### st.set_page_config
 
 ```python
 st.set_page_config(page_title=None, 
-                   page_icon=None, layout="centered", 
+                   page_icon=None,
+                   layout="centered", 
                    initial_sidebar_state="auto", 
                    menu_items=None
                   )
@@ -1871,7 +1894,6 @@ st.set_page_config(page_title=None,
   - 空缺时会使用Streamlit的icon
   - 可以使用emoji来设置
   - 使用"random"会随机选择一个emoji作为icon
-
 - **layout** ("centered" or "wide")
   - 布局对齐效果
   - 默认为"centered"
@@ -1888,6 +1910,12 @@ st.set_page_config(page_title=None,
   - "Get help"：一个URL链接，如果为空，则隐藏不显示在菜单中
   - "Report a Bug"：一个URL链接，如果为空，则隐藏不显示在菜单中
   - "About"：一段Markdown来展现相关信息，如果为空，则显示Streamlit的默认About内容
+- **问题**：
+  - 这部分设置功能可以写在另一个文件中，在主文件中被引入，且仍然保证其是第一个被调用的Streamlit指令
+  - 但最好将该部分设置写在主文件中
+  - 该设置如果出现在另一个文件中，在主文件被启动时只会在第一次引入该部分的设置
+  - 在上述情况中，手动刷新页面、页面本身的动态刷新都会使当前应用丢失这部分设置信息
+
 
 
 
@@ -1950,7 +1978,7 @@ element.add_rows(self, data=None, **kwargs)
 
 ### st.session_state
 
-- 用st.session_state来管理所有的组件的返回值
+- 用st.session_state来管理当前会话中的变量
 
 - 通过组件的key来访问组件，类似dict或用成员变量的形式访问
 
@@ -2533,3 +2561,14 @@ Streamlit提供对以下数据库的便捷连接方式，当然也可以在pytho
 - [Private Google Sheet](https://docs.streamlit.io/knowledge-base/tutorials/databases/private-gsheet)
 - [Public Google Sheet](https://docs.streamlit.io/knowledge-base/tutorials/databases/public-gsheet)
 - [TigerGraph](https://docs.streamlit.io/knowledge-base/tutorials/databases/tigergraph)
+
+
+
+## 使用说明
+
+### 更好的控制流程
+
+Streamlit完全基于`.py`文件的顺序来实现页面效果，这意味着整个应用程序的运行逻辑也是按照脚本顺序的，已经计算过的表达式不会再次被计算，即变量值不会在页面中动态地变化，除非页面中的某个组件被点击，进而整个页面会被重新运行一次。
+
+部分组件需要在`with`语句中执行，这意味着有一些局部变量不能在页面的其他部分被访问，可以考虑将这部分变量保存在文件中，在需要被访问时直接访问文件来获取它的值。
+
